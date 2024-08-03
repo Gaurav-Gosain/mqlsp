@@ -48,10 +48,32 @@ func DecodeUTF16(b []byte) (string, error) {
 }
 
 func compile(target, logfile string, logger *log.Logger) (outputStr string, status int) {
+	compileScript := filepath.Join(xdg.DataHome, "mqlsp", "compile.sh")
+
+	// check if the compile script exists
+	if _, err := os.Stat(compileScript); os.IsNotExist(err) {
+		scriptContent := `#!/bin/bash
+
+# Compile the MetaTrader 4 script
+
+# Get the script name
+SCRIPT_NAME=$1
+
+# Get the log file name
+LOG_FILE_NAME=$2
+
+# Compile the script
+eval $METAEDITOR_PATH /compile:"$SCRIPT_NAME" /log:"$LOG_FILE_NAME" /s`
+
+		if err := os.WriteFile(compileScript, []byte(scriptContent), 0755); err != nil {
+			panic(err)
+		}
+	}
+
 	logger.Printf("target: %s", target)
 	logger.Printf("logfile: %s", logfile)
 
-	cmd := exec.Command("eval", "$METAEDITOR_PATH", target, logfile)
+	cmd := exec.Command(compileScript, target, logfile)
 
 	logger.Printf("metaeditor command: %s", cmd.String())
 

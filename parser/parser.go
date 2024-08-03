@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -110,9 +111,17 @@ func Parse(target string, logger *log.Logger) (diagnostics []Diagnostic, err err
 	// strip the file:// from the target
 	target = strings.Replace(target, "file://", "", 1)
 
+	target, _ = url.QueryUnescape(target)
+
+	logger.Printf("target: %s", target)
+
 	// remove getwd from the target
 	pwd, _ := os.Getwd()
 	target = strings.Replace(target, pwd, "", 1)
+
+	logger.Printf("PWD: %s", pwd)
+
+	logger.Printf("target (after pwd removal): %s", target)
 
 	// remove "/" prefix
 	target = strings.TrimPrefix(target, "/")

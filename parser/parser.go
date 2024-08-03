@@ -69,6 +69,9 @@ eval $METAEDITOR_PATH /compile:"$SCRIPT_NAME" /log:"$LOG_FILE_NAME" /s`
 		}
 	}
 
+	logger.Printf("target: %s", target)
+	logger.Printf("logfile: %s", logfile)
+
 	cmd := exec.Command(compileScript, target, logfile)
 
 	logger.Printf("metaeditor command: %s", cmd.String())

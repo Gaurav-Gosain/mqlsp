@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
@@ -48,32 +49,22 @@ func DecodeUTF16(b []byte) (string, error) {
 }
 
 func compile(target, logfile string, logger *log.Logger) (outputStr string, status int) {
-	compileScript := filepath.Join(xdg.DataHome, "mqlsp", "compile.sh")
-
-	// check if the compile script exists
-	if _, err := os.Stat(compileScript); os.IsNotExist(err) {
-		scriptContent := `#!/bin/bash
-
-# Compile the MetaTrader 4 script
-
-# Get the script name
-SCRIPT_NAME=$1
-
-# Get the log file name
-LOG_FILE_NAME=$2
-
-# Compile the script
-eval $METAEDITOR_PATH /compile:"$SCRIPT_NAME" /log:"$LOG_FILE_NAME" /s`
-
-		if err := os.WriteFile(compileScript, []byte(scriptContent), 0755); err != nil {
-			panic(err)
+	metaeditorPath := os.Getenv("METAEDITOR_PATH")
+	args := []string{metaeditorPath, "/compile:" + target, "/log:" + logfile, "/s"}
+	mainCommand := "wine"
+	if metaeditorPath == "" {
+		args = append([]string{"../metaeditor.exe"}, args...)
+		// check if goos is windows
+		if runtime.GOOS == "windows" {
+			args = args[1:]
+			mainCommand = "../metaeditor.exe"
 		}
 	}
 
 	logger.Printf("target: %s", target)
 	logger.Printf("logfile: %s", logfile)
 
-	cmd := exec.Command(compileScript, target, logfile)
+	cmd := exec.Command(mainCommand, args...)
 
 	logger.Printf("metaeditor command: %s", cmd.String())
 

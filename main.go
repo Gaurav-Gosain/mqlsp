@@ -136,6 +136,18 @@ func handleMessage(logger *log.Logger, writer io.Writer, state analysis.State, m
 				},
 			})
 		}
+	case "textDocument/codeAction":
+		var request lsp.CodeActionRequest
+		if err := json.Unmarshal(contents, &request); err != nil {
+			logger.Printf("textDocument/codeAction: %s", err)
+			return
+		}
+
+		// Create a response
+		response := state.TextDocumentCodeAction(request.ID, request.Params.TextDocument.URI, request.Params.Range.Start.Line)
+
+		// Write it back
+		writeResponse(writer, response)
 	}
 }
 
